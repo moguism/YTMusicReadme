@@ -89,6 +89,7 @@ def get_latest_watch():
     img_x, img_y = PAD, (SVG_HEIGHT - IMG) // 2
 
     TEXT_X = img_x + IMG + 16
+    TEXT_MAX_W = SVG_WIDTH - TEXT_X - PAD
 
     svg = f"""<svg xmlns="http://www.w3.org/2000/svg"
      xmlns:xlink="http://www.w3.org/1999/xlink"
@@ -133,14 +134,11 @@ def get_latest_watch():
                     flood-color="{dark1_hex}" flood-opacity="0.9"/>
     </filter>
 
-    <!-- Shimmer animation -->
-    <linearGradient id="shimmer" x1="-100%" y1="0" x2="200%" y2="0" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="white" stop-opacity="0"/>
-      <stop offset="50%" stop-color="white" stop-opacity="0.04"/>
+    <!-- Shimmer: static gradient, the rect itself moves -->
+    <linearGradient id="shimmer" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%"   stop-color="white" stop-opacity="0"/>
+      <stop offset="50%"  stop-color="white" stop-opacity="0.07"/>
       <stop offset="100%" stop-color="white" stop-opacity="0"/>
-      <animateTransform attributeName="gradientTransform" type="translate"
-        from="-{SVG_WIDTH} 0" to="{SVG_WIDTH} 0"
-        dur="3s" repeatCount="indefinite"/>
     </linearGradient>
   </defs>
 
@@ -155,8 +153,13 @@ def get_latest_watch():
     </radialGradient>
     <rect width="{SVG_WIDTH}" height="{SVG_HEIGHT}" fill="url(#spotGlow)"/>
 
-    <!-- Shimmer overlay -->
-    <rect width="{SVG_WIDTH}" height="{SVG_HEIGHT}" fill="url(#shimmer)"/>
+    <!-- Shimmer overlay: rect moves smoothly across the card -->
+    <rect x="-{SVG_WIDTH}" y="0" width="{SVG_WIDTH}" height="{SVG_HEIGHT}"
+          fill="url(#shimmer)" clip-path="url(#cardClip)">
+      <animate attributeName="x"
+               from="-{SVG_WIDTH}" to="{SVG_WIDTH}"
+               dur="3s" repeatCount="indefinite"/>
+    </rect>
 
     <!-- Top edge highlight -->
     <line x1="16" y1="0.5" x2="{SVG_WIDTH - 16}" y2="0.5"
@@ -205,7 +208,7 @@ def get_latest_watch():
         fill="white" fill-opacity="0.35">YouTube Music</text>
 
   <!-- Animated equalizer bars -->
-  {_eq_bars(SVG_WIDTH - PAD - 36, 95)}
+  {_eq_bars(SVG_WIDTH - PAD - 36, 95, accent_hex)}
 </svg>"""
 
     svg_path = os.path.join(IMAGE_FOLDER, SVG_FILENAME)
@@ -215,7 +218,7 @@ def get_latest_watch():
     return send_file(svg_path, mimetype="image/svg+xml")
 
 
-def _eq_bars(x_start: int, y_base: int) -> str:
+def _eq_bars(x_start: int, y_base: int, color: str) -> str:
     """Generate 5 animated equalizer bars."""
     bars = []
     bar_w = 3
