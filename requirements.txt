@@ -1,6 +1,6 @@
 asarPy==1.0.1
 blinker==1.9.0
-certifi==2026.2.25
+certifi==2026.10.18
 charset-normalizer==3.4.5
 click==8.3.1
 Flask==3.1.3
